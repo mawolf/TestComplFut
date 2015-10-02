@@ -1,5 +1,8 @@
 package com.company;
 
+import com.company.process.Process;
+import com.company.net.NetworkHandler;
+import com.company.process.CommProcess;
 import java.util.concurrent.*;
 
 /**
@@ -12,8 +15,9 @@ public class JolieMain {
 
     final private EventQueue<Event> eq = new EventQueue<>();
     final private Executor threadPoolExecutor = Executors.newFixedThreadPool(WORKER_THREADS_NUM);
+    final private NetworkHandler networkHandler = new NetworkHandler();
 
-    private class WorkerThread implements Runnable {
+    private class ProcessWorker implements Runnable {
         private boolean exit = false;
 
         @Override
@@ -21,7 +25,8 @@ public class JolieMain {
             while (!exit) {
                 try {
                     Event event = eq.dequeue();
-                    event.getProcess().run();
+                    Process process = event.getProcess();
+                    process.run();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -29,35 +34,43 @@ public class JolieMain {
         }
     }
 
-
+    public NetworkHandler getNetworkHandler() {
+        return networkHandler;
+    }
+    
+    /**
+     * Registers the process for execution
+     * @param process 
+     */
+    public void execute(Process process) {
+        Event event = new Event(process);
+        eq.enqueue(event);
+    }
+    
+    /**
+     * Registers the processes for parallel execution.
+     * @param processes 
+     */
+    public void execute(Process ... processes) {
+        for (Process process : processes)
+            execute(process);
+    }
+    
     public void run() throws InterruptedException {
 
-        System.out.println("run() called");
-
         for ( int i = 0; i < WORKER_THREADS_NUM; i++ ) {
-            threadPoolExecutor.execute(new WorkerThread());
+            threadPoolExecutor.execute(new ProcessWorker());
         }
 
-//        Thread.sleep(1000);
+//        Event event = new Event(new SequentialProcess(this, new Process<String>(this) {
+//            @Override
+//            public CompletableFuture<String> run() {
+//                System.out.println("Wohoo!");
+//                return new CompletableFuture<String>();
+//
+//            }
+//        }));
 
-        System.out.println("WorkerThreads created");
-        Event event = new Event(new SequentialProcess(new Process<String>() {
-            @Override
-            public CompletableFuture<String> run() {
-                System.out.println("Wohoo!");
-                return new CompletableFuture<String>();
-
-            }
-        }));
-
-        eq.enqueue(event);
-        System.out.println("enqueue event");
-
-        for ( int i = 0; i < WORKER_THREADS_NUM; i++ ) {
-            threadPoolExecutor.execute(new WorkerThread());
-        }
-
-
+//        eq.enqueue(event);
     }
-
 }

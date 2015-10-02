@@ -1,28 +1,22 @@
 package com.company;
 
+import com.company.process.Process;
+import java.util.concurrent.CompletableFuture;
+
 /**
  * User: Martin Wolf
  * At: 02/10/2015, 12:29
  */
 public class Event {
 
-    private Process<?> process;
+    private final Process process;
 
-    public Event ( Process<?> process ) {
+    public Event ( Process process) {
         this.process = process;
     }
 
-    @Deprecated
-    public void onCompleted () {
-
-    }
-
-    @Deprecated
-    public void onFailed (Throwable ex) {
-
-    }
-
-    public Process<?> getProcess() {
+    public Process getProcess() {
         return process;
     }
+
 }
