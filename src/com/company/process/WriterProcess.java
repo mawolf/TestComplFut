@@ -25,7 +25,7 @@ public class WriterProcess extends CommProcess {
 
     @Override
     public void run() {
-        getJolieMain().getNetworkHandler().send(this, message);
+        getJolieMain().getNetworkHandler().send(this);
     }
     
 }

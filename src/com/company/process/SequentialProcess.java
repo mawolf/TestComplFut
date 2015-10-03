@@ -1,7 +1,6 @@
 package com.company.process;
 
 import com.company.JolieMain;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * User: Martin Wolf

@@ -37,9 +37,8 @@ public class Main {
             SocketCommChannel channel = 
                     new SocketCommChannel(uri, "dummy", asc);
             jolieMain.getNetworkHandler().addChannel(channel);
-            channel.recv(null);
-            int i = 0;
             
+            int i = 0;
             jolieMain.execute(new SequentialProcess(jolieMain, new Process[] {
                 new WriterProcess(jolieMain, new Message(uri, "dummy", String.format("Sequential response: %d\n", i++))),
                 new WriterProcess(jolieMain, new Message(uri, "dummy", String.format("Sequential response: %d\n", i++))),

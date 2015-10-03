@@ -17,20 +17,18 @@ public class JolieMain {
     final private Executor threadPoolExecutor = Executors.newFixedThreadPool(WORKER_THREADS_NUM);
     final private NetworkHandler networkHandler = new NetworkHandler();
 
-    private class ProcessWorker implements Runnable {
-        private boolean exit = false;
+    private class ProcessWorker extends EventQueueWorker<Event> { 
 
+        public ProcessWorker(EventQueue<Event> queue) {
+            super(queue);
+        }
+        
         @Override
-        public void run() {
-            while (!exit) {
-                try {
-                    Event event = eq.dequeue();
-                    Process process = event.getProcess();
-                    process.run();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        public void work(Event event) {
+            Process process = event.getProcess();
+            process.run();
+            if (!(process instanceof CommProcess))
+                process.callback();
         }
     }
 
@@ -59,18 +57,8 @@ public class JolieMain {
     public void run() throws InterruptedException {
 
         for ( int i = 0; i < WORKER_THREADS_NUM; i++ ) {
-            threadPoolExecutor.execute(new ProcessWorker());
+            threadPoolExecutor.execute(new ProcessWorker(eq));
         }
 
-//        Event event = new Event(new SequentialProcess(this, new Process<String>(this) {
-//            @Override
-//            public CompletableFuture<String> run() {
-//                System.out.println("Wohoo!");
-//                return new CompletableFuture<String>();
-//
-//            }
-//        }));
-
-//        eq.enqueue(event);
     }
 }

@@ -31,5 +31,13 @@ public class EventQueue<T> {
         }
         return element;
     }
+    
+    public T poll() {
+        return baseQueue.poll();
+    }
+    
+    public T peek() {
+        return baseQueue.peek();
+    }
 
 }

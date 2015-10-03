@@ -14,7 +14,7 @@ import com.company.net.Message;
  */
 abstract public class CommProcess extends Process {
 
-    protected final Message message;
+    protected Message message;
     
     public CommProcess(Process parent, Message message) {
         super(parent);
@@ -24,6 +24,19 @@ abstract public class CommProcess extends Process {
     public CommProcess(JolieMain jolieMain, Message message) {
         super(jolieMain);
         this.message = message;
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
+    }
+
+    public Message getMessage() {
+        return message;
+    }
+    
+    public void callback(Message message) {
+        setMessage(message);
+        callback();
     }
     
 }
