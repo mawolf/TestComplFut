@@ -20,7 +20,7 @@ public class Message implements Serializable {
     private final long id = idGenerator.getAndIncrement();
     private URI uri;
     private String protocol;
-    private long responseFor;
+    private long responseId;
     private boolean response;
     private String content;
 
@@ -28,7 +28,7 @@ public class Message implements Serializable {
         this.uri = uri;
         this.protocol = protocol;
         this.content = content;
-        this.responseFor = 0;
+        this.responseId = 0;
         this.response = false;
     }
     
@@ -36,7 +36,7 @@ public class Message implements Serializable {
         this.uri = uri;
         this.protocol = protocol;
         this.content = content;
-        this.responseFor = responseFor;
+        this.responseId = responseFor;
         this.response = responseFor != 0;
     }
     
@@ -45,6 +45,14 @@ public class Message implements Serializable {
         return msg;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public long getResponseId() {
+        return responseId;
+    }
+    
     public URI getUri() {
         return uri;
     }
@@ -59,6 +67,10 @@ public class Message implements Serializable {
 
     public String getProtocol() {
         return protocol;
+    }
+
+    public boolean isResponse() {
+        return response;
     }
     
 }

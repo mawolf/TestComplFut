@@ -28,8 +28,9 @@ public class NetworkHandler {
     
     private final Map<CommChannel, EventQueue<CommProcess>> writerQueues
             = new HashMap<>();
-    private final Map<CommChannel, EventQueue<CommProcess>> readerQueues
-            = new HashMap<>();
+    
+    private final Map<Long, CommProcess> waitingProcesses = new HashMap<>();
+    
     private final EventQueue<ChannelEvent> eventQueue = new EventQueue<>();
     
     private final ExecutorService executor = Executors.newFixedThreadPool(WORKERS_NUM);
@@ -48,9 +49,9 @@ public class NetworkHandler {
                 assert(process != null);
                 channel.send(process);
             } else if (event.getType() == ChannelEvent.ChannelEventType.READ_READY) {
-                CommProcess process = getReaderQueue(channel).poll();
-                assert(process != null);
-                channel.recv(process);
+                Message msg = channel.getRecievedMessages().poll();
+                assert (msg != null);
+                handleMessage(msg);
             }
         }
         
@@ -62,12 +63,15 @@ public class NetworkHandler {
     }
     
     private EventQueue<CommProcess> getWriterQueue(CommChannel channel) {
-        return getQueue(writerQueues, channel);
+        EventQueue<CommProcess> queue = writerQueues.get(channel);
+        if (queue == null) {
+            synchronized(writerQueues) { 
+                queue = new EventQueue<>();
+                writerQueues.putIfAbsent(channel, queue);
+            }
+        }
+        return queue;
     }    
-    
-    private EventQueue<CommProcess> getReaderQueue(CommChannel channel) {
-        return getQueue(readerQueues, channel);
-    }
     
     private EventQueue<CommProcess> getQueue(
             Map<CommChannel, EventQueue<CommProcess>> queueMap, 
@@ -85,9 +89,32 @@ public class NetworkHandler {
         Message message = process.getMessage();
         CommChannel channel = getChannel(message.getUri(), message.getProtocol());
         getWriterQueue(channel).enqueue(process);
+        
         // Only add event if channel is not already writing
         if (channel.setWrite(true))
             eventQueue.enqueue(new ChannelEvent(channel, ChannelEvent.ChannelEventType.WRITE_READY));
+    }
+    
+    public void recvResponseFor(CommProcess process) {
+        waitingProcesses.put(process.getMessage().getId(), process);
+    }
+    
+    private void handleMessage(Message msg) {
+        if (msg.isResponse())
+            handleResponse(msg);
+        else 
+            handleRequest(msg);
+    }    
+    
+    private void handleResponse(Message msg) {
+        assert(msg.isResponse());
+        CommProcess process = waitingProcesses.get(msg.getResponseId());
+        process.callback(msg);
+    }
+    
+    private void handleRequest(Message msg) {
+        assert (!msg.isResponse());
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
     
     public CommChannel getChannel(URI uri, String protocol) {

@@ -11,6 +11,7 @@ import com.company.process.CommProcess;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -23,6 +24,9 @@ abstract public class CommChannel {
     private final String protocol;
     private AtomicBoolean reading = new AtomicBoolean();
     private AtomicBoolean writing = new AtomicBoolean();
+    
+    protected final ConcurrentLinkedQueue<Message> recievedMessages = 
+            new ConcurrentLinkedQueue<>();
     
     private ArrayList<EventListener> writeListeners = new ArrayList<>();
     private ArrayList<EventListener> readListeners = new ArrayList<>();
@@ -39,13 +43,15 @@ abstract public class CommChannel {
     public String getProtocol() {
         return protocol;
     }
+
+    public ConcurrentLinkedQueue<Message> getRecievedMessages() {
+        return recievedMessages;
+    }
     
     abstract public void send(CommProcess process);
     
-    abstract public void recv(CommProcess process);
+    abstract protected void recv();
     
-    abstract public void recvResponseFor(CommProcess process, Message message);
-
     public void addWriteListener(EventListener<CommChannel> listener) {
         writeListeners.add(listener);
     }

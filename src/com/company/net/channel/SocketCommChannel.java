@@ -18,6 +18,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.Channels;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +39,7 @@ public class SocketCommChannel extends CommChannel {
         this.channel = channel;
         bis = new BufferedInputStream(Channels.newInputStream(channel));
         bos = new BufferedOutputStream(Channels.newOutputStream(channel));
+        recv();
     }
 
     @Override
@@ -62,34 +64,35 @@ public class SocketCommChannel extends CommChannel {
     }
 
     @Override
-    public void recv(CommProcess process) {
+    protected void recv() {
         ByteBuffer inputBuffer = ByteBuffer.allocate(1024);
+        
         // We can add timeout and timeout handling here.
-        channel.read(inputBuffer, process, new CompletionHandler<Integer, CommProcess>() {
+        channel.read(inputBuffer, null, new CompletionHandler<Integer, Void>() {
 
             @Override
-            public void completed(Integer bytesRead, CommProcess process) {
-                byte[] buffer = new byte[bytesRead];
-                // Rewind the input buffer to read from the beginning
-                inputBuffer.rewind();
-                inputBuffer.get(buffer);
-                // I guess we could have read the content of multiple messages
-                Message message = new Message(getUri(), getProtocol(), new String(buffer));
-                Logger.getGlobal().log(Level.INFO, "Recieved msg: {0}", message.getContent());
-                process.callback(message);
-                notifyReadListeners();
+            public void completed(Integer bytesRead, Void v) {
+                if (bytesRead > 0) {
+                    byte[] buffer = new byte[bytesRead];
+                    // Rewind the input buffer to read from the beginning
+                    inputBuffer.rewind();
+                    inputBuffer.get(buffer);
+                    // I guess we could have read the content of multiple messages
+                    Message message = new Message(getUri(), getProtocol(), new String(buffer));
+                    Logger.getGlobal().log(Level.INFO, "Recieved msg: {0}", message.getContent());
+                    recievedMessages.add(message);
+                    //Notify network handler
+                    notifyReadListeners();
+                }
+                // Register for next read
+                recv();
             }
 
             @Override
-            public void failed(Throwable exc, CommProcess process) {
-                process.callback(exc);
+            public void failed(Throwable exc, Void v) {
+                throw new UnsupportedOperationException("Not yet implemented");
             }
 
         });
-    }
-
-    @Override
-    public void recvResponseFor(CommProcess process, Message message) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
