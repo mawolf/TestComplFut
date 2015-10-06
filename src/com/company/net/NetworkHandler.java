@@ -151,10 +151,7 @@ public class NetworkHandler {
         
         @Override
         public void handle(CommChannel channel) {
-            if (!channel.setRead(false))
-                throw new IllegalStateException();
-            if (writerQueues.get(channel).peek() != null && channel.setRead(true))
-                eventQueue.enqueue(new ChannelEvent(channel, ChannelEvent.ChannelEventType.READ_READY));
+            eventQueue.enqueue(new ChannelEvent(channel, ChannelEvent.ChannelEventType.READ_READY));
         }
         
     }

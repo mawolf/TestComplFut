@@ -19,7 +19,7 @@ public class ParallelProcess extends ComposedProcess {
 
     @Override
     public void run() {
-        getJolieMain().execute(children.toArray(new Process[0]));
+        getJolieMain().execute(children.toArray(new Process[children.size()]));
     }
     
     @Override
