@@ -22,7 +22,6 @@ abstract public class CommChannel {
     
     private final URI uri;
     private final String protocol;
-    private AtomicBoolean reading = new AtomicBoolean();
     private AtomicBoolean writing = new AtomicBoolean();
     
     protected final ConcurrentLinkedQueue<Message> recievedMessages = 
@@ -70,11 +69,7 @@ abstract public class CommChannel {
             listener.handle(this);
     }
     
-    public boolean setRead(boolean b) {
-        return reading.compareAndSet(!b, b);
-    }
-    
     public boolean setWrite(boolean b) {
-        return reading.compareAndSet(!b, b);
+        return writing.compareAndSet(!b, b);
     }
 }
